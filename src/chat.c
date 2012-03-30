@@ -19,6 +19,8 @@
 #include	<stdlib.h>
 #include	<stdio.h>
 
+#include	"server_conn_handling.h"
+
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  main
@@ -28,5 +30,21 @@
     int
 main ( int argc, char *argv[] )
 {
+    extern int optind;
+
+    char *port;
+    char *address;
+    int sfd;
+
+    if (argc < 3) {
+        fprintf(stderr, "Not enough parameters to start!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    address = argv[optind++];
+    port = argv[optind++];
+
+    sfd = server_listen(address, port);
+    
     return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */
