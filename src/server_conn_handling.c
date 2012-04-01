@@ -28,7 +28,7 @@ static const int MAX_CONST_PENDING = 10;
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  server_listen
- *  Description:  
+ *  Description:  Create new socket, bind it to an address and begin listening.
  * =====================================================================================
  */
     int 
@@ -40,7 +40,7 @@ server_listen ( char *address, char *port )
 
     hints.ai_family = AF_UNSPEC; /* allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_STREAM; /* only stream sockes */
-    hints.ai_flags = AI_PASSIVE;
+    hints.ai_flags = AI_PASSIVE; /* For wildcard IP address */
 
     s = getaddrinfo(address, port, &hints, &result);
     if (s != 0) {
@@ -70,7 +70,7 @@ server_listen ( char *address, char *port )
 
     /* No address succeeded */
     if (rp == NULL) {    
-        fprintf(stderr, "Could not bind\n");
+        fprintf(stderr, "Could not bind socket to port.\n");
         exit(EXIT_FAILURE);
     }   
 
@@ -78,9 +78,31 @@ server_listen ( char *address, char *port )
 
     /* start listening */
     if(listen(sfd, MAX_CONST_PENDING) == -1){
-        fprintf(stderr, "Can't listen on socket");
+        fprintf(stderr, "Can't listen on socket.");
         exit(EXIT_FAILURE);
     }
     return sfd;
 }		/* -----  end of function server_listen  ----- */
 
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  new_connection
+ *  Description:  
+ * =====================================================================================
+ */
+    int 
+new_connection (int sfd)
+{
+    struct sockaddr_storage addr;
+    socklen_t len = sizeof(addr);
+    int nsfd;
+
+    nsfd = accept(sfd, (struct sockaddr *)&addr, &len);
+    if (nsfd == -1) {
+        err(1, "accept");
+        exit(EXIT_FAILURE);
+    }
+
+    return nsfd;
+}		/* -----  end of function new_connection  ----- */

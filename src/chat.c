@@ -19,6 +19,10 @@
 #include	<stdlib.h>
 #include	<stdio.h>
 
+#include        <sys/types.h>
+#include        <sys/socket.h>
+#include        <netdb.h>
+
 #include	"server_conn_handling.h"
 
 /* 
@@ -36,6 +40,8 @@ main ( int argc, char *argv[] )
     char *address;
     int sfd;
 
+    int nsfd;
+
     if (argc < 3) {
         fprintf(stderr, "Not enough parameters to start!\n");
         exit(EXIT_FAILURE);
@@ -44,7 +50,15 @@ main ( int argc, char *argv[] )
     address = argv[optind++];
     port = argv[optind++];
 
+    //create new socket and listen on it
     sfd = server_listen(address, port);
-    
+
+    //wait for new connection and create a socket when we get one
+    nsfd = new_connection(sfd);
+
+    close(nsfd);
+
+    close(sfd);
+        
     return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */
