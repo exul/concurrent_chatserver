@@ -23,6 +23,8 @@
 #include        <sys/socket.h>
 #include        <netdb.h>
 
+#include        <fcntl.h>
+
 static const int MAX_CONST_PENDING = 10;
 
 /* 
@@ -88,7 +90,7 @@ server_listen ( char *address, char *port )
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  new_connection
- *  Description:  
+ *  Description:  Create a socket for new clients.
  * =====================================================================================
  */
     int 
@@ -97,10 +99,19 @@ new_connection (int sfd)
     struct sockaddr_storage addr;
     socklen_t len = sizeof(addr);
     int nsfd;
+    int flags;
 
     nsfd = accept(sfd, (struct sockaddr *)&addr, &len);
     if (nsfd == -1) {
         err(1, "accept");
+        exit(EXIT_FAILURE);
+    }
+
+    /* set socket to nonblocking */
+    flags = fcntl(nsfd, F_GETFL);
+
+    if (fcntl(nsfd, F_SETFL, flags | O_NONBLOCK) < 0){
+        printf("Unable to set socket to nonblocking."); 
         exit(EXIT_FAILURE);
     }
 
