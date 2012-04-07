@@ -42,6 +42,9 @@ main ( int argc, char *argv[] )
 
     int nsfd;
 
+    char buffer[256];
+    int bytes_recv;
+
     if (argc < 3) {
         fprintf(stderr, "Not enough parameters to start!\n");
         exit(EXIT_FAILURE);
@@ -54,7 +57,17 @@ main ( int argc, char *argv[] )
     sfd = server_listen(address, port);
 
     //wait for new connection and create a socket when we get one
+    //TODO: Implement a loop to get more than one connection
     nsfd = new_connection(sfd);
+
+    for(;;){
+        // read message from socket
+        bytes_recv = recv(nsfd, buffer, sizeof(buffer),0);
+
+        if (bytes_recv > 0){
+            printf("Client sent: %s", buffer); 
+        }
+    }
 
     close(nsfd);
 
