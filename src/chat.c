@@ -23,6 +23,9 @@
 #include        <sys/socket.h>
 #include        <netdb.h>
 
+#include        <pthread.h>
+
+#include	"chat.h"
 #include	"server_conn_handling.h"
 
 /* 
@@ -42,8 +45,8 @@ main ( int argc, char *argv[] )
 
     int nsfd;
 
-    char buffer[256];
-    int bytes_recv;
+    //allow max 256 theads
+    pthread_t threads[256];
 
     if (argc < 3) {
         fprintf(stderr, "Not enough parameters to start!\n");
@@ -56,9 +59,35 @@ main ( int argc, char *argv[] )
     //create new socket and listen on it
     sfd = server_listen(address, port);
 
-    //wait for new connection and create a socket when we get one
-    //TODO: Implement a loop to get more than one connection
-    nsfd = new_connection(sfd);
+    //wait for new connection and create a thread when we get one
+    for(;;){
+        void *arg;
+        nsfd = new_connection(sfd);
+
+        printf("Socket: %i\n", nsfd);
+        pthread_create(&threads[nsfd], NULL, (void*)tcp_read, (void*) &nsfd);
+    }
+
+    close(nsfd);
+
+    close(sfd);
+        
+    return EXIT_SUCCESS;
+}				/* ----------  end of function main  ---------- */
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  tcp_read
+ *  Description:  Read characters from tcp socket.
+ * =====================================================================================
+ */
+    void
+tcp_read ( int *arg ){
+    char buffer[256];
+    int bytes_recv;
+    int nsfd;
+
+    nsfd = *arg;
 
     for(;;){
         // read message from socket
@@ -68,10 +97,4 @@ main ( int argc, char *argv[] )
             printf("Client sent: %s", buffer); 
         }
     }
-
-    close(nsfd);
-
-    close(sfd);
-        
-    return EXIT_SUCCESS;
-}				/* ----------  end of function main  ---------- */
+}				/* ----------  end of function tcp_read ---------- */

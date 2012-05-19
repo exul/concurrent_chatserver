@@ -115,5 +115,7 @@ new_connection (int sfd)
         exit(EXIT_FAILURE);
     }
 
+    printf("New client connected\n");
+
     return nsfd;
 }		/* -----  end of function new_connection  ----- */
