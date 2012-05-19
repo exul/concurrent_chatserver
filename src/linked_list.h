@@ -25,10 +25,13 @@ typedef struct list_node {
 } list_node_t;
 
 typedef struct linked_list {
+    int next_index;
+    /*TODO: rename to first_p, last_p?*/
     list_node_t *first;
+    list_node_t *last;
     pthread_mutex_t mutex;
 } linked_list_t;
 
 int linked_list_init( linked_list_t *linked_list_p );
-int linked_list_insert( int index, void **data_pp, linked_list_t *linked_list_p );
+int linked_list_insert( void **data_pp, linked_list_t *linked_list_p );
 int linked_list_remove( int index, void **data_pp, linked_list_t *linked_list_p );
