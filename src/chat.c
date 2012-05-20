@@ -36,7 +36,7 @@
  *  Description:  Obviously the main function to start the chat.
  * =====================================================================================
  */
-//TODO: Check if we allocated the memory correctly (struct pointers, and pointers inside structs
+//TODO: Check if we allocated the memory correctly (struct pointers, and pointers inside structs)
     int
 main ( int argc, char *argv[] )
 {
@@ -45,8 +45,6 @@ main ( int argc, char *argv[] )
     char *port;
     char *address;
     int sfd;
-
-    int nsfd;
 
     linked_list_t ll;
 
@@ -70,10 +68,17 @@ main ( int argc, char *argv[] )
     //wait for new connection and create a thread when we get one
     for(;;){
         struct chat_client *new_client_p;
+        int nsfd;
+        int *nsfd_p;
+        //nsfd_p = (int *)malloc(sizeof(int));
         nsfd = new_connection(sfd);
+        //nsfd_p = &nsfd;
+
+        //printf("Pointer to nsfd is %p\n", &nsfd);
+        //printf("Pointer to nsfd is %p\n", nsfd_p);
 
         // add socket file descriptor to linked list
-        linked_list_insert((void*)&nsfd, &ll);
+        //linked_list_insert((void*)&nsfd, &ll);
 
         printf("Socket: %i\n", nsfd);
         // create struct to store client information
@@ -84,9 +89,13 @@ main ( int argc, char *argv[] )
         // TODO: Ask user for nickname, check if it's longer than 50 characters
         // create a thread for each client
         pthread_create(&threads[nsfd], NULL, (void*)tcp_read, (void*)new_client_p);
-    }
 
-    close(nsfd);
+        // add socket file descriptor to linked list
+        // TODO: Isn't realy nice => We may wan't to add clients to the list instead of sockets
+        linked_list_insert((void*)&(new_client_p->socket), &ll);
+
+        //TODO: Manage disconnecting clients
+    }
 
     close(sfd);
         
@@ -105,6 +114,8 @@ tcp_read ( struct chat_client *chat_client_p ){
     int bytes_recv;
     int nsfd;
 
+    list_node_t *cur;
+
     //nsfd = *arg;
     nsfd = chat_client_p->socket;
     printf("Socket in struct in function is %i\n", nsfd);
@@ -117,6 +128,17 @@ tcp_read ( struct chat_client *chat_client_p ){
 
         if (bytes_recv > 0){
             printf("Client sent: %s", buffer); 
+
+            //TODO: Use a lock for every entry, no global lock!
+            pthread_mutex_lock(&(chat_client_p->ll->mutex));
+            //printf("The pointer to the first entry is: %i", chat_client_p->ll->first->next_p->index);
+            for(cur=chat_client_p->ll->first; cur != NULL; cur=cur->next_p){
+                int *socket;
+                socket = cur->data_p;
+                printf("Client with index %i, Socket-FD: %i\n", cur->index, *socket);
+                //printf("Client with index %i, Socket-FD: %p\n", cur->index, cur->data_p);
+            }
+            pthread_mutex_unlock(&(chat_client_p->ll->mutex));
         }
     }
 }				/* ----------  end of function tcp_read ---------- */

@@ -61,6 +61,8 @@ linked_list_insert ( void **data_pp, linked_list_t *linked_list_p )
     new->index = linked_list_p->next_index++;
     // set data pointer
     new->data_p = data_pp;
+    // set next_p to NULL, otherwise there just rubish in next_p and we get as segfault
+    new->next_p = NULL;
 
     if(linked_list_p->first == NULL){
         linked_list_p->first = new; 
