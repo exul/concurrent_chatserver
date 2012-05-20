@@ -25,6 +25,8 @@
 
 #include        <pthread.h>
 
+#include        <string.h>
+
 //TODO: linked_list.h has to be included before chat.h, that's not nice
 #include        "linked_list.h"
 #include	"chat.h"
@@ -69,25 +71,17 @@ main ( int argc, char *argv[] )
     for(;;){
         struct chat_client *new_client_p;
         int nsfd;
-        int *nsfd_p;
-        //nsfd_p = (int *)malloc(sizeof(int));
+        // get socket file desciptor for new client
         nsfd = new_connection(sfd);
-        //nsfd_p = &nsfd;
 
-        //printf("Pointer to nsfd is %p\n", &nsfd);
-        //printf("Pointer to nsfd is %p\n", nsfd_p);
-
-        // add socket file descriptor to linked list
-        //linked_list_insert((void*)&nsfd, &ll);
-
-        printf("Socket: %i\n", nsfd);
         // create struct to store client information
         new_client_p = (struct chat_client *)malloc(sizeof(struct chat_client));
         new_client_p->socket = nsfd;
-        printf("Socket in struct is %i\n", new_client_p->socket);
         new_client_p->ll = &ll;
+
         // TODO: Ask user for nickname, check if it's longer than 50 characters
         // create a thread for each client
+        
         pthread_create(&threads[nsfd], NULL, (void*)tcp_read, (void*)new_client_p);
 
         // add socket file descriptor to linked list
@@ -118,7 +112,6 @@ tcp_read ( struct chat_client *chat_client_p ){
 
     //nsfd = *arg;
     nsfd = chat_client_p->socket;
-    printf("Socket in struct in function is %i\n", nsfd);
 
     for(;;){
         // read message from socket
@@ -131,12 +124,17 @@ tcp_read ( struct chat_client *chat_client_p ){
 
             //TODO: Use a lock for every entry, no global lock!
             pthread_mutex_lock(&(chat_client_p->ll->mutex));
-            //printf("The pointer to the first entry is: %i", chat_client_p->ll->first->next_p->index);
             for(cur=chat_client_p->ll->first; cur != NULL; cur=cur->next_p){
+                //TODO: Can this be done in one line?
                 int *socket;
                 socket = cur->data_p;
-                printf("Client with index %i, Socket-FD: %i\n", cur->index, *socket);
-                //printf("Client with index %i, Socket-FD: %p\n", cur->index, cur->data_p);
+                // TODO: Here we would take the nickname
+                char *nickname = "Client sent: ";
+                // do net send message to myself
+                if(*socket != chat_client_p->socket){
+                    send(*socket, nickname, strlen(nickname), 0);
+                    send(*socket, buffer, strlen(buffer), 0);
+                }
             }
             pthread_mutex_unlock(&(chat_client_p->ll->mutex));
         }
