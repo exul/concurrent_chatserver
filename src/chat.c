@@ -116,7 +116,6 @@ tcp_read ( struct chat_client *chat_client_p ){
 
     for(;;){
         // read message from socket
-        // TODO: Some of the old bytes are repeated in the new message, why?
         // We need a better end of line detection!
         bytes_recv = recv(nsfd, buffer, sizeof(buffer),0);
 
@@ -148,6 +147,8 @@ tcp_read ( struct chat_client *chat_client_p ){
                 }
                 pthread_mutex_unlock(&(chat_client_p->ll->mutex));
             }
+            // empty buffer
+            memset(&buffer[0], 0, sizeof(buffer));
         }
     }
 }				/* ----------  end of function tcp_read ---------- */
