@@ -25,6 +25,8 @@
 
 #include        <pthread.h>
 
+//TODO: linked_list.h has to be included before chat.h, that's not nice
+#include        "linked_list.h"
 #include	"chat.h"
 #include	"server_conn_handling.h"
 
@@ -34,6 +36,7 @@
  *  Description:  Obviously the main function to start the chat.
  * =====================================================================================
  */
+//TODO: Check if we allocated the memory correctly (struct pointers, and pointers inside structs
     int
 main ( int argc, char *argv[] )
 {
@@ -44,6 +47,8 @@ main ( int argc, char *argv[] )
     int sfd;
 
     int nsfd;
+
+    linked_list_t ll;
 
     //allow max 256 theads
     pthread_t threads[256];
@@ -59,13 +64,26 @@ main ( int argc, char *argv[] )
     //create new socket and listen on it
     sfd = server_listen(address, port);
 
+    //initialize linked list
+    linked_list_init(&ll);
+
     //wait for new connection and create a thread when we get one
     for(;;){
-        void *arg;
+        struct chat_client *new_client_p;
         nsfd = new_connection(sfd);
 
+        // add socket file descriptor to linked list
+        linked_list_insert((void*)&nsfd, &ll);
+
         printf("Socket: %i\n", nsfd);
-        pthread_create(&threads[nsfd], NULL, (void*)tcp_read, (void*) &nsfd);
+        // create struct to store client information
+        new_client_p = (struct chat_client *)malloc(sizeof(struct chat_client));
+        new_client_p->socket = nsfd;
+        printf("Socket in struct is %i\n", new_client_p->socket);
+        new_client_p->ll = &ll;
+        // TODO: Ask user for nickname, check if it's longer than 50 characters
+        // create a thread for each client
+        pthread_create(&threads[nsfd], NULL, (void*)tcp_read, (void*)new_client_p);
     }
 
     close(nsfd);
@@ -82,15 +100,19 @@ main ( int argc, char *argv[] )
  * =====================================================================================
  */
     void
-tcp_read ( int *arg ){
+tcp_read ( struct chat_client *chat_client_p ){
     char buffer[256];
     int bytes_recv;
     int nsfd;
 
-    nsfd = *arg;
+    //nsfd = *arg;
+    nsfd = chat_client_p->socket;
+    printf("Socket in struct in function is %i\n", nsfd);
 
     for(;;){
         // read message from socket
+        // TODO: Some of the old bytes are repeated in the new message, why?
+        // We need a better end of line detection!
         bytes_recv = recv(nsfd, buffer, sizeof(buffer),0);
 
         if (bytes_recv > 0){
