@@ -80,9 +80,7 @@ main ( int argc, char *argv[] )
         new_client_p->ll = &ll;
         strcpy(new_client_p->nickname, "");
 
-        // TODO: Ask user for nickname, check if it's longer than 50 characters
         // create a thread for each client
-        
         pthread_create(&threads[nsfd], NULL, (void*)tcp_read, (void*)new_client_p);
 
         // add socket file descriptor to linked list
@@ -108,40 +106,41 @@ tcp_read ( struct chat_client *chat_client_p ){
     char buffer[256];
     int bytes_recv;
     int nsfd;
+    char *hello = "Bitte gib deinen Nickname ein: "; 
 
     list_node_t *cur;
 
-    //nsfd = *arg;
     nsfd = chat_client_p->socket;
+
+    // Tell client that he has to enter his nickname first
+    send(nsfd, hello, strlen(hello), 0);
 
     for(;;){
         // read message from socket
-        // We need a better end of line detection!
+        // TODO: We need a better end of line detection!
         bytes_recv = recv(nsfd, buffer, sizeof(buffer),0);
 
         if (bytes_recv > 0){
             if(strlen(chat_client_p->nickname)==0){
+                //TODO: is this nice?
                 int len = strlen(buffer);
                 if(buffer[len-1] == '\n')
-                    len--;
+                    len=len-2;
                 strncpy(chat_client_p->nickname, buffer, len);
+                strcat(chat_client_p->nickname, ": ");
+                //TODO: Tell other clients that we joined
             }
             else{
-                printf("Client Name: %s, len %i \n",chat_client_p->nickname, strlen(chat_client_p->nickname));
                 printf("Client sent: %s", buffer); 
 
                 //TODO: Use a lock for every entry, no global lock!
                 pthread_mutex_lock(&(chat_client_p->ll->mutex));
                 for(cur=chat_client_p->ll->first; cur != NULL; cur=cur->next_p){
-                    //TODO: Can this be done in one line?
-                    int *socket;
-                    socket = cur->data_p;
-                    // TODO: Here we would take the nickname
-                    //char *nickname = "Client sent: ";
-                    char *nickname = "Client sent: ";
+                    int *socket = cur->data_p;
+                    
                     // do net send message to myself
                     if(*socket != chat_client_p->socket){
-                        send(*socket, nickname, strlen(nickname), 0);
+                        send(*socket, chat_client_p->nickname, strlen(chat_client_p->nickname), 0);
                         send(*socket, buffer, strlen(buffer), 0);
                     }
                 }
