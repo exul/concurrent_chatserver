@@ -39,6 +39,7 @@
  * =====================================================================================
  */
 //TODO: Check if we allocated the memory correctly (struct pointers, and pointers inside structs)
+//TODO: Why do we get "telnet: Unable to connect to remote host: Connection refused"?
     int
 main ( int argc, char *argv[] )
 {
@@ -86,6 +87,8 @@ main ( int argc, char *argv[] )
         // add socket file descriptor to linked list
         // TODO: Isn't realy nice => We may wan't to add clients to the list instead of sockets
         linked_list_insert((void*)&(new_client_p->socket), &ll);
+        // TODO: This should be done nicer. Do we really need this information here?
+        new_client_p->index = new_client_p->ll->last->index;
 
         //TODO: Manage disconnecting clients
     }
@@ -104,7 +107,7 @@ main ( int argc, char *argv[] )
     void
 tcp_read ( struct chat_client *chat_client_p ){
     char buffer[256];
-    int bytes_recv;
+    int retval;
     int nsfd;
     char *hello = "Bitte gib deinen Nickname ein: "; 
 
@@ -115,14 +118,23 @@ tcp_read ( struct chat_client *chat_client_p ){
     // Tell client that he has to enter his nickname first
     send(nsfd, hello, strlen(hello), 0);
 
+    // TODO: We need a better end of line detection!
     for(;;){
         // read message from socket
-        // TODO: We need a better end of line detection!
-        bytes_recv = recv(nsfd, buffer, sizeof(buffer),0);
+        retval = read(nsfd, buffer, sizeof(buffer),0);
+        
+        //if a client disconnectes, we leave the function and the threads ends
+        if(retval == 0){
+            printf("Client %i disconnected\n", nsfd); 
 
-        if (bytes_recv > 0){
+            // remove socket from linked list
+            linked_list_remove(chat_client_p->index, chat_client_p->ll);
+            return;
+        } 
+
+        //TODO: Error handling
+        if (retval != -1){
             if(strlen(chat_client_p->nickname)==0){
-                //TODO: is this nice?
                 int len = strlen(buffer);
                 if(buffer[len-1] == '\n')
                     len=len-2;
@@ -136,6 +148,8 @@ tcp_read ( struct chat_client *chat_client_p ){
                 //TODO: Use a lock for every entry, no global lock!
                 pthread_mutex_lock(&(chat_client_p->ll->mutex));
                 for(cur=chat_client_p->ll->first; cur != NULL; cur=cur->next_p){
+                    int *cur_socket = cur->data_p;
+                    printf("It's client with socket-fd: %i\n", *cur_socket);
                     int *socket = cur->data_p;
                     
                     // do net send message to myself

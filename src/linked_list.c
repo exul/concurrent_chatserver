@@ -41,15 +41,15 @@ linked_list_init ( linked_list_t *linked_list_p )
     return 0;
 }		/* -----  end of function linked_list_init  ----- */
 
-
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  linked_list_insert
  *  Description:  Insert new element into linked list.
  * =====================================================================================
  */
+//TODO: Do cleanup, maybe first or last node isn't needed
     int
-linked_list_insert ( void **data_pp, linked_list_t *linked_list_p )
+linked_list_insert ( void *data_p, linked_list_t *linked_list_p )
 {
     list_node_t *new;
 
@@ -60,7 +60,7 @@ linked_list_insert ( void **data_pp, linked_list_t *linked_list_p )
     // next index;
     new->index = linked_list_p->next_index++;
     // set data pointer
-    new->data_p = data_pp;
+    new->data_p = data_p;
     // set next_p to NULL, otherwise there just rubish in next_p and we get as segfault
     new->next_p = NULL;
 
@@ -72,6 +72,10 @@ linked_list_insert ( void **data_pp, linked_list_t *linked_list_p )
         linked_list_p->last->next_p = new;
         linked_list_p->last = new; 
     }
+
+    //TODO: Only for debugging
+    int *my_socket = new->data_p;
+    printf("Socket %i added\n", *my_socket);
 
     // unlock linked list
     pthread_mutex_unlock(&(linked_list_p->mutex));
@@ -86,23 +90,30 @@ linked_list_insert ( void **data_pp, linked_list_t *linked_list_p )
  * =====================================================================================
  */
     int
-linked_list_remove ( int index, void **data_pp, linked_list_t *linked_list_p )
+linked_list_remove ( int index, linked_list_t *linked_list_p )
 {
     list_node_t *cur, *prev;
 
     // lock linked list
     pthread_mutex_lock(&(linked_list_p->mutex));
 
-    // loop through list
     for(cur=prev=linked_list_p->first; cur != NULL; prev=cur, cur=cur->next_p){
-        // we found the element
         if(cur->index == index){
-            *data_pp = cur->data_p; 
-            prev->next_p = cur->next_p; 
+            //reset first node if we delete start node
+            if(cur->index == linked_list_p->first->index){
+                linked_list_p->first = linked_list_p->first->next_p; 
+            }
+            //reset last node
+            else if(cur->index == linked_list_p->last->index){
+                linked_list_p->last = prev;
+            }
+
+            prev->next_p=cur -> next_p; 
             free(cur);
             break;
-        } 
-        else if (cur->index > index){
+        }
+        // break is index is out of range
+        else if(cur->index > index){
             break; 
         }
     }
@@ -110,5 +121,4 @@ linked_list_remove ( int index, void **data_pp, linked_list_t *linked_list_p )
     // unlock linked list
     pthread_mutex_unlock(&(linked_list_p->mutex));
 
-    return 0;
 }		/* -----  end of function linked_list_remove  ----- */

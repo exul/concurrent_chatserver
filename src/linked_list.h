@@ -33,5 +33,5 @@ typedef struct linked_list {
 } linked_list_t;
 
 int linked_list_init( linked_list_t *linked_list_p );
-int linked_list_insert( void **data_pp, linked_list_t *linked_list_p );
-int linked_list_remove( int index, void **data_pp, linked_list_t *linked_list_p );
+int linked_list_insert( void *data_pp, linked_list_t *linked_list_p );
+int linked_list_remove( int index, linked_list_t *linked_list_p );
