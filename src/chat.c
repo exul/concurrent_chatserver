@@ -27,10 +27,7 @@
 
 #include        <string.h>
 
-//TODO: linked_list.h has to be included before chat.h, that's not nice
-#include        "linked_list.h"
 #include	"chat.h"
-#include	"server_conn_handling.h"
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -39,7 +36,6 @@
  * =====================================================================================
  */
 //TODO: Check if we allocated the memory correctly (struct pointers, and pointers inside structs)
-//TODO: Why do we get "telnet: Unable to connect to remote host: Connection refused"?
     int
 main ( int argc, char *argv[] )
 {
@@ -89,8 +85,6 @@ main ( int argc, char *argv[] )
         linked_list_insert((void*)&(new_client_p->socket), &ll);
         // TODO: This should be done nicer. Do we really need this information here?
         new_client_p->index = new_client_p->ll->last->index;
-
-        //TODO: Manage disconnecting clients
     }
 
     close(sfd);
@@ -125,7 +119,7 @@ tcp_read ( struct chat_client *chat_client_p ){
         
         //if a client disconnectes, we leave the function and the threads ends
         if(retval == 0){
-            printf("Client %i disconnected\n", nsfd); 
+            printf("%s disconnected\n", chat_client_p->nickname); 
 
             // remove socket from linked list
             linked_list_remove(chat_client_p->index, chat_client_p->ll);
@@ -143,13 +137,10 @@ tcp_read ( struct chat_client *chat_client_p ){
                 //TODO: Tell other clients that we joined
             }
             else{
-                printf("Client sent: %s", buffer); 
-
                 //TODO: Use a lock for every entry, no global lock!
                 pthread_mutex_lock(&(chat_client_p->ll->mutex));
                 for(cur=chat_client_p->ll->first; cur != NULL; cur=cur->next_p){
                     int *cur_socket = cur->data_p;
-                    printf("It's client with socket-fd: %i\n", *cur_socket);
                     int *socket = cur->data_p;
                     
                     // do net send message to myself

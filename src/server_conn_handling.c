@@ -107,13 +107,5 @@ new_connection (int sfd)
         exit(EXIT_FAILURE);
     }
 
-    /* set socket to nonblocking */
-    flags = fcntl(nsfd, F_GETFL);
-
-    if (fcntl(nsfd, F_SETFL, flags | O_NONBLOCK) < 0){
-        printf("Unable to set socket to nonblocking."); 
-        exit(EXIT_FAILURE);
-    }
-
     return nsfd;
 }		/* -----  end of function new_connection  ----- */
