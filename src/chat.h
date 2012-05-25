@@ -39,7 +39,7 @@ int linked_list_remove( int index, linked_list_t *linked_list_p );
 struct chat_client {
    int socket; 
    struct linked_list *ll;
-   char nickname[50];
+   char nickname[64];
    int index;
 };
 

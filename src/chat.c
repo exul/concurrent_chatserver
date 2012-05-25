@@ -101,11 +101,10 @@ main ( int argc, char *argv[] )
     void
 tcp_read ( struct chat_client *chat_client_p ){
     char buffer[256];
+    char message[320];
     int retval;
     int nsfd;
     char *hello = "Bitte gib deinen Nickname ein: "; 
-
-    list_node_t *cur;
 
     nsfd = chat_client_p->socket;
 
@@ -119,7 +118,9 @@ tcp_read ( struct chat_client *chat_client_p ){
         
         //if a client disconnectes, we leave the function and the threads ends
         if(retval == 0){
-            printf("%s disconnected\n", chat_client_p->nickname); 
+            strcpy(message, chat_client_p->nickname);
+            strcat(message, " disconnected\n");
+            write_message( chat_client_p, message);
 
             // remove socket from linked list
             linked_list_remove(chat_client_p->index, chat_client_p->ll);
@@ -127,32 +128,57 @@ tcp_read ( struct chat_client *chat_client_p ){
         } 
 
         //TODO: Error handling
+        //TODO: Use strncpy and strncat instead of strcpy, strcat
         if (retval != -1){
             if(strlen(chat_client_p->nickname)==0){
                 int len = strlen(buffer);
                 if(buffer[len-1] == '\n')
                     len=len-2;
                 strncpy(chat_client_p->nickname, buffer, len);
-                strcat(chat_client_p->nickname, ": ");
-                //TODO: Tell other clients that we joined
+                strcpy(message, chat_client_p->nickname);
+                strcat(message, " joined chat\n");
+                write_message( chat_client_p, message);
             }
             else{
-                //TODO: Use a lock for every entry, no global lock!
-                pthread_mutex_lock(&(chat_client_p->ll->mutex));
-                for(cur=chat_client_p->ll->first; cur != NULL; cur=cur->next_p){
-                    int *cur_socket = cur->data_p;
-                    int *socket = cur->data_p;
-                    
-                    // do net send message to myself
-                    if(*socket != chat_client_p->socket){
-                        send(*socket, chat_client_p->nickname, strlen(chat_client_p->nickname), 0);
-                        send(*socket, buffer, strlen(buffer), 0);
-                    }
-                }
-                pthread_mutex_unlock(&(chat_client_p->ll->mutex));
+                strcpy(message, chat_client_p->nickname);
+                strcat(message, ": ");
+                strcat(message, buffer);
+                write_message( chat_client_p, message);
             }
+
             // empty buffer
             memset(&buffer[0], 0, sizeof(buffer));
+            memset(&message[0], 0, sizeof(message));
         }
     }
 }				/* ----------  end of function tcp_read ---------- */
+
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  write_line
+ *  Description:  Write a given line to all clients.
+ * =====================================================================================
+ */
+//TODO: Diese Funktion wird aus jedem Thread aufgerufen, ist es ok, wenn ich beim write jeden Socket mit einer Mutex schütze? Die Funktion wäre dann parallel aufrufbar, oder?
+    int 
+write_message ( struct chat_client *chat_client_p, char message[320] )
+{
+    list_node_t *cur;
+
+    //TODO: Use a lock for every entry, no global lock!
+    pthread_mutex_lock(&(chat_client_p->ll->mutex));
+
+    for(cur=chat_client_p->ll->first; cur != NULL; cur=cur->next_p){
+        int *cur_socket = cur->data_p;
+        int *socket = cur->data_p;
+        
+        // do not send message to myself
+        if(*socket != chat_client_p->socket){
+            send(*socket, message, strlen(message), 0);
+        }
+    }
+    pthread_mutex_unlock(&(chat_client_p->ll->mutex));
+
+    return EXIT_SUCCESS;
+}		/* -----  end of function write_line  ----- */
