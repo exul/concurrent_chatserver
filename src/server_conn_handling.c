@@ -127,7 +127,7 @@ close_connection( struct chat_client *chat_client_p )
 
     strcpy(message, chat_client_p->nickname);
     strcat(message, " disconnected\n");
-    write_message( chat_client_p, message);
+    write_message(chat_client_p, message);
 
     // remove socket from linked list
     linked_list_remove(chat_client_p->index, chat_client_p->ll);
