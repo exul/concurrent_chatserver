@@ -22,6 +22,7 @@ typedef struct list_node {
     int index;
     void *data_p;
     struct list_node *next_p;
+    pthread_mutex_t mutex;
 } list_node_t;
 
 typedef struct linked_list {

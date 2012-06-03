@@ -64,6 +64,13 @@ linked_list_insert ( void *data_p, linked_list_t *linked_list_p )
     // set next_p to NULL, otherwise there just rubish in next_p and we get as segfault
     new->next_p = NULL;
 
+    // initialize mutex
+    int retval = pthread_mutex_init(&(new->mutex), NULL);
+    // check, if initializing was successful
+    if (retval != 0)
+        fprintf(stderr, "pthread_mutex_init error %d",retval), exit(1);
+
+    // set first/last node
     if(linked_list_p->first == NULL){
         linked_list_p->first = new; 
         linked_list_p->last = new; 

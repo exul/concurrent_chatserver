@@ -105,13 +105,14 @@ tcp_read ( struct chat_client *chat_client_p ){
     int retval;
     int nsfd;
     char *hello = "Bitte gib deinen Nickname ein: "; 
+    int len;
+    int message_terminated;
 
     nsfd = chat_client_p->socket;
 
     // Tell client that he has to enter his nickname first
     send(nsfd, hello, strlen(hello), 0);
 
-    // TODO: We need a better end of line detection!
     for(;;){
         // read message from socket
         retval = read(nsfd, buffer, sizeof(buffer),0);
@@ -131,7 +132,7 @@ tcp_read ( struct chat_client *chat_client_p ){
         //TODO: Use strncpy and strncat instead of strcpy, strcat
         if (retval != -1){
             if(strlen(chat_client_p->nickname)==0){
-                int len = strlen(buffer);
+                len = strlen(buffer);
                 if(buffer[len-1] == '\n')
                     len=len-2;
                 strncpy(chat_client_p->nickname, buffer, len);
@@ -140,10 +141,26 @@ tcp_read ( struct chat_client *chat_client_p ){
                 write_message( chat_client_p, message);
             }
             else{
-                strcpy(message, chat_client_p->nickname);
-                strcat(message, ": ");
-                strcat(message, buffer);
+                // write nickname, if the last message was terminated by \n
+                if(message_terminated){
+                    strcpy(message, chat_client_p->nickname);
+                    strcat(message, ": ");
+                    strcat(message, buffer);
+                }
+                else{
+                    strcpy(message, buffer);
+                }
+
                 write_message( chat_client_p, message);
+            }
+
+            // check if the message is \n terminated
+            len = strlen(message); 
+            if(message[len-1] == '\n'){
+                message_terminated = 1; 
+            }
+            else{
+                message_terminated = 0; 
             }
 
             // empty buffer
@@ -166,10 +183,9 @@ write_message ( struct chat_client *chat_client_p, char message[320] )
 {
     list_node_t *cur;
 
-    //TODO: Use a lock for every entry, no global lock!
-    pthread_mutex_lock(&(chat_client_p->ll->mutex));
-
     for(cur=chat_client_p->ll->first; cur != NULL; cur=cur->next_p){
+        pthread_mutex_lock(&(cur->mutex));
+
         int *cur_socket = cur->data_p;
         int *socket = cur->data_p;
         
@@ -177,8 +193,8 @@ write_message ( struct chat_client *chat_client_p, char message[320] )
         if(*socket != chat_client_p->socket){
             send(*socket, message, strlen(message), 0);
         }
+        pthread_mutex_unlock(&(cur->mutex));
     }
-    pthread_mutex_unlock(&(chat_client_p->ll->mutex));
 
     return EXIT_SUCCESS;
 }		/* -----  end of function write_line  ----- */
