@@ -48,13 +48,12 @@ linked_list_init ( linked_list_t *linked_list_p )
  * =====================================================================================
  */
 //TODO: Do cleanup, maybe first or last node isn't needed
-//TODO: Do not use global lock
     int
 linked_list_insert ( void *data_p, linked_list_t *linked_list_p )
 {
     list_node_t *new;
 
-    // lock list
+    // lock list, it doesn't make sense to lock nodes, because inserts have to be serialized
     pthread_mutex_lock(&(linked_list_p->mutex));
     // allocate memory for new node
     new = (list_node_t *)malloc(sizeof(list_node_t));
@@ -80,10 +79,6 @@ linked_list_insert ( void *data_p, linked_list_t *linked_list_p )
         linked_list_p->last->next_p = new;
         linked_list_p->last = new; 
     }
-
-    //TODO: Only for debugging
-    int *my_socket = new->data_p;
-    printf("Socket %i added\n", *my_socket);
 
     // unlock linked list
     pthread_mutex_unlock(&(linked_list_p->mutex));
