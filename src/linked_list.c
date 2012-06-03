@@ -48,6 +48,7 @@ linked_list_init ( linked_list_t *linked_list_p )
  * =====================================================================================
  */
 //TODO: Do cleanup, maybe first or last node isn't needed
+//TODO: Do not use global lock
     int
 linked_list_insert ( void *data_p, linked_list_t *linked_list_p )
 {
@@ -61,7 +62,7 @@ linked_list_insert ( void *data_p, linked_list_t *linked_list_p )
     new->index = linked_list_p->next_index++;
     // set data pointer
     new->data_p = data_p;
-    // set next_p to NULL, otherwise there just rubish in next_p and we get as segfault
+    // set next_p to NULL, otherwise there just rubish in next_p and we get a segfault
     new->next_p = NULL;
 
     // initialize mutex
@@ -96,15 +97,28 @@ linked_list_insert ( void *data_p, linked_list_t *linked_list_p )
  *  Description:  Remove element from linked list.
  * =====================================================================================
  */
+//TODO: Do we have to do that much locking?
     int
 linked_list_remove ( int index, linked_list_t *linked_list_p )
 {
-    list_node_t *cur, *prev;
-
-    // lock linked list
-    pthread_mutex_lock(&(linked_list_p->mutex));
+    list_node_t *cur, *prev, *next;
 
     for(cur=prev=linked_list_p->first; cur != NULL; prev=cur, cur=cur->next_p){
+        next = cur->next_p;
+
+        // lock prev, cur and next
+        pthread_mutex_lock(&(prev->mutex));
+
+        // we can't lock cur if cur == prev
+        if(cur != prev){
+            pthread_mutex_lock(&(cur->mutex));
+        }
+
+        // we can't lock the next node if there's only one
+        if(next != NULL){
+            pthread_mutex_lock(&(next->mutex));
+        }
+
         if(cur->index == index){
             //reset first node if we delete start node
             if(cur->index == linked_list_p->first->index){
@@ -116,16 +130,51 @@ linked_list_remove ( int index, linked_list_t *linked_list_p )
             }
 
             prev->next_p=cur -> next_p; 
+
+            // unlock prev, cur and next
+            pthread_mutex_unlock(&(prev->mutex));
+
+            // we can't unlock cur if cur == prev
+            if(cur != prev){
+                pthread_mutex_unlock(&(cur->mutex));
+            }
+
+            // we can't unlock the next node if there's only one
+            if(next != NULL){
+                pthread_mutex_unlock(&(next->mutex));
+            }
+
             free(cur);
             break;
         }
         // break is index is out of range
         else if(cur->index > index){
+            // unlock prev, cur and next
+            pthread_mutex_unlock(&(prev->mutex));
+
+            // we can't unlock cur if cur == prev
+            if(cur != prev){
+                pthread_mutex_unlock(&(cur->mutex));
+            }
+
+            // we can't unlock the next node if there's only one
+            if(next != NULL){
+                pthread_mutex_unlock(&(next->mutex));
+            }
             break; 
         }
+
+        // unlock prev, cur
+        pthread_mutex_unlock(&(prev->mutex));
+
+        // we can't unlock cur if cur == prev
+        if(cur != prev){
+            pthread_mutex_unlock(&(cur->mutex));
+        }
+
+        // we can't unlock the next node if there's only one
+        if(next != NULL){
+            pthread_mutex_unlock(&(next->mutex));
+        }
     }
-
-    // unlock linked list
-    pthread_mutex_unlock(&(linked_list_p->mutex));
-
 }		/* -----  end of function linked_list_remove  ----- */
