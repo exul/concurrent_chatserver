@@ -47,5 +47,6 @@ struct chat_client {
 int new_connection (int sfd);
 void tcp_read (struct chat_client *chat_client_p);
 
-int server_listen(char *address, char *port);
+int server_listen (char *address, char *port);
 int new_connection (int sfd);
+int close_connection (struct chat_client *chat_client_p);

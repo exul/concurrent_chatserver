@@ -119,7 +119,7 @@ tcp_read ( struct chat_client *chat_client_p ){
         
         //if a client disconnectes, we leave the function and the threads ends
         if(retval == 0){
-            client_disconnect(chat_client_p);
+            close_connection(chat_client_p);
             return;
         } 
 
@@ -136,9 +136,11 @@ tcp_read ( struct chat_client *chat_client_p ){
                 write_message( chat_client_p, message);
             }
             else{
+                // disconnect if clients sends /quit command
+                // TODO: Why does telnet send \r\n?
                 char command[8] = "/quit\r\n\0";
                 if(strcmp(buffer, command) == 0){
-                    client_disconnect(chat_client_p);
+                    close_connection(chat_client_p);
                     return;
                 }
 
@@ -199,28 +201,3 @@ write_message ( struct chat_client *chat_client_p, char message[320] )
 
     return EXIT_SUCCESS;
 }		/* -----  end of function write_line  ----- */
-
-
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  client_disconnect
- *  Description:  Disconnects a client from the server
- * =====================================================================================
- */
-    int 
-client_disconnect ( struct chat_client *chat_client_p )
-{
-    char message[320];
-
-    strcpy(message, chat_client_p->nickname);
-    strcat(message, " disconnected\n");
-    write_message( chat_client_p, message);
-
-    // remove socket from linked list
-    linked_list_remove(chat_client_p->index, chat_client_p->ll);
-
-    close(chat_client_p->socket);
-
-    free(chat_client_p);
-    return EXIT_SUCCESS;
-}		/* -----  end of function client_disconnect  ----- */

@@ -25,6 +25,10 @@
 
 #include        <fcntl.h>
 
+#include        <string.h>
+
+#include        "chat.h"
+
 static const int MAX_CONST_PENDING = 10;
 
 /* 
@@ -109,3 +113,27 @@ new_connection (int sfd)
 
     return nsfd;
 }		/* -----  end of function new_connection  ----- */
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  client_disconnect
+ *  Description:  Disconnects a client from the server
+ * =====================================================================================
+ */
+    int 
+close_connection( struct chat_client *chat_client_p )
+{
+    char message[320];
+
+    strcpy(message, chat_client_p->nickname);
+    strcat(message, " disconnected\n");
+    write_message( chat_client_p, message);
+
+    // remove socket from linked list
+    linked_list_remove(chat_client_p->index, chat_client_p->ll);
+
+    close(chat_client_p->socket);
+
+    free(chat_client_p);
+    return EXIT_SUCCESS;
+}
