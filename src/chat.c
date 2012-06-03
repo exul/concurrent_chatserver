@@ -119,17 +119,12 @@ tcp_read ( struct chat_client *chat_client_p ){
         
         //if a client disconnectes, we leave the function and the threads ends
         if(retval == 0){
-            strcpy(message, chat_client_p->nickname);
-            strcat(message, " disconnected\n");
-            write_message( chat_client_p, message);
-
-            // remove socket from linked list
-            linked_list_remove(chat_client_p->index, chat_client_p->ll);
+            client_disconnect(chat_client_p);
             return;
         } 
 
         //TODO: Error handling
-        //TODO: Use strncpy and strncat instead of strcpy, strcat
+        //TODO: Use strncpy and strncat instead of strcpy, strcat, or even better memcpy/memcmp?
         if (retval != -1){
             if(strlen(chat_client_p->nickname)==0){
                 len = strlen(buffer);
@@ -141,6 +136,12 @@ tcp_read ( struct chat_client *chat_client_p ){
                 write_message( chat_client_p, message);
             }
             else{
+                char command[8] = "/quit\r\n\0";
+                if(strcmp(buffer, command) == 0){
+                    client_disconnect(chat_client_p);
+                    return;
+                }
+
                 // write nickname, if the last message was terminated by \n
                 if(message_terminated){
                     strcpy(message, chat_client_p->nickname);
@@ -198,3 +199,28 @@ write_message ( struct chat_client *chat_client_p, char message[320] )
 
     return EXIT_SUCCESS;
 }		/* -----  end of function write_line  ----- */
+
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  client_disconnect
+ *  Description:  Disconnects a client from the server
+ * =====================================================================================
+ */
+    int 
+client_disconnect ( struct chat_client *chat_client_p )
+{
+    char message[320];
+
+    strcpy(message, chat_client_p->nickname);
+    strcat(message, " disconnected\n");
+    write_message( chat_client_p, message);
+
+    // remove socket from linked list
+    linked_list_remove(chat_client_p->index, chat_client_p->ll);
+
+    close(chat_client_p->socket);
+
+    free(chat_client_p);
+    return EXIT_SUCCESS;
+}		/* -----  end of function client_disconnect  ----- */
