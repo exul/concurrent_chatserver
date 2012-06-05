@@ -74,9 +74,66 @@ In der Vorlesung haben die Studenten die Grundlagen der parallele Programmierung
 \subsection{Ziele der Arbeit}
 Entwicklung eines Chatservers in C, der in der Lage ist, mehrere Chat-Clients zu bedienen. Die Applikation muss serverseitig mit phtreads implementiert werden. Als Client kommt telnet bzw. netcat zum Einsatz. Das Ziel der Arbeit ist ein funktionaler Chatserver, der Nachrichten erfolgreich über das Netzwerk an andere, ebenfalls verbundene Chatclients, weitergeben kann.
 
-\section{Bedienung}
+\section{Umsetzung}
+\subsection{Netzwerk}
+Um sowohl IPv4, wie auch IPv6 zu unterstützten, wird \texttt{getaddrinfo()} verwendet. \texttt{getaddrinfo()} liefert eine Liste von Adressen zurück. Die Liste wird nach einer verwendbaren Adresse durchsucht. Falls keine entsprechende Adresse gefunden wird, wir das Programm beendet:
+
+\begin{verbatim}
+hints.ai_protocol = pe->p_proto;
+    hints.ai_family = AF_UNSPEC; /* allow IPv4 or IPv6 */
+    hints.ai_socktype = SOCK_STREAM; /* only stream sockes */
+    hints.ai_flags = AI_CANONNAME;
+    hints.ai_addrlen = 0;
+    hints.ai_addr = 0;
+    hints.ai_canonname = 0;
+
+    s = getaddrinfo(address, port, &hints, &result);
+    if (s != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
+        exit(EXIT_FAILURE);
+    }
+
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+        sfd = socket(rp->ai_family, rp->ai_socktype,
+            rp->ai_protocol);
+
+        if (sfd == -1)
+            continue;
+
+        /* Success */
+        if (bind(sfd, rp->ai_addr, rp->ai_addrlen) == 0)
+            break;
+
+        close(sfd);
+    }
+
+    if (rp == NULL) {
+        fprintf(stderr, "Could not bind socket to port.\n");
+        exit(EXIT_FAILURE);
+    }
+\end{verbatim}
+
+\subsection{Mutli-Threading}
+Damit eine möglichst hohe Parallelität erreicht wird, wird für jeden Client, der sich zum Server verbindet ein eigener Thread erstellt. Jeder Thread nimmt auf seinem Socket Nachrichten entgegen und sendet die Empfangenen Daten an alle anderen Clients weiter. Dies ist möglich, weil jeder Client einen Pointer auf eine LinkedList enthält, in welcher alle Clients eingetragen sind.
+
+\subsection{Nachrichtenlänge}
+Da Nachrichten länger sein können, als die Länge des Buffers, wird so lange gelesen, bis ein Newline (Unix Newline \textbackslash n) gelesen wird.
+
 \section{Probleme}
 \subsection{TIME\_WAIT}
+Wenn der Server beendet wird, wird der Socket im Normalfall nicht direkt geschlossen. Wird nun versucht den Server auf dem selben Port wieder zu starten, funktioniert dies nicht. Um dieses Problem zu vermeiden, kann ein Port wieder benutzt werden:
+
+\begin{verbatim}
+int on = 1;
+int status = setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
+
+if (status == -1) 
+{   
+    perror("setsockopt(...,SO_REUSEADDR,...)");
+}
+\end{verbatim}
+
 \subsection{Message während dem schreiben}
+\section{Bedienung}
 \section{Fazit}
 \end{document}
