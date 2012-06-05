@@ -25,6 +25,8 @@
 
 #include <pthread.h>
 
+#include <unistd.h>
+
 #include <string.h>
 
 #include "chat.h"
@@ -36,6 +38,7 @@
  * =====================================================================================
  */
 //TODO: Check if we allocated the memory correctly (struct pointers, and pointers inside structs)
+//TODO: Problem unter Ubuntu: getaddrinfo: ai_socktype not supported
     int
 main ( int argc, char *argv[] )
 {

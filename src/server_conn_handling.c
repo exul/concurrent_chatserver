@@ -23,6 +23,11 @@
 #include        <sys/socket.h>
 #include        <netdb.h>
 
+#include        <unistd.h> 
+#include        <stdio.h>
+
+#include        <err.h>
+
 #include        <fcntl.h>
 
 #include        <string.h>
@@ -42,7 +47,7 @@ server_listen ( char *address, char *port )
 {
     struct addrinfo hints;
     struct addrinfo *result, *rp;
-    int sfd, s, flags;
+    int sfd, s;
 
     hints.ai_family = AF_UNSPEC; /* allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_STREAM; /* only stream sockes */
@@ -103,7 +108,6 @@ new_connection (int sfd)
     struct sockaddr_storage addr;
     socklen_t len = sizeof(addr);
     int nsfd;
-    int flags;
 
     nsfd = accept(sfd, (struct sockaddr *)&addr, &len);
     if (nsfd == -1) {

@@ -172,4 +172,6 @@ linked_list_remove ( int index, linked_list_t *linked_list_p )
             pthread_mutex_unlock(&(next->mutex));
         }
     }
+
+    return EXIT_SUCCESS;
 }		/* -----  end of function linked_list_remove  ----- */
