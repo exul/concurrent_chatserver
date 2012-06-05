@@ -18,6 +18,10 @@
 
 #include <pthread.h>
 
+#define MAX_BUFFER_LEN 254
+#define MAX_NICK_LEN 64
+#define MAX_MESSAGE_LEN 320
+
 typedef struct list_node {
     int index;
     void *data_p;
@@ -41,7 +45,7 @@ int linked_list_remove( int index, linked_list_t *linked_list_p );
 struct chat_client {
    int socket; 
    struct linked_list *ll;
-   char nickname[64];
+   char nickname[MAX_NICK_LEN];
    int index;
 };
 
