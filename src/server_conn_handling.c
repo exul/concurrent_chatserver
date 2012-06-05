@@ -48,10 +48,17 @@ server_listen ( char *address, char *port )
     struct addrinfo hints;
     struct addrinfo *result, *rp;
     int sfd, s;
+    struct protoent *pe;
 
+    pe = getprotobyname("tcp");
+
+    hints.ai_protocol = pe->p_proto;
     hints.ai_family = AF_UNSPEC; /* allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_STREAM; /* only stream sockes */
-    hints.ai_flags = AI_PASSIVE; /* For wildcard IP address */
+    hints.ai_flags = AI_CANONNAME;
+    hints.ai_addrlen = 0;
+    hints.ai_addr = 0;
+    hints.ai_canonname = 0;
 
     s = getaddrinfo(address, port, &hints, &result);
     if (s != 0) {
