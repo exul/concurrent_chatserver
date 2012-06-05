@@ -37,7 +37,6 @@
  *  Description:  Obviously the main function to start the chat.
  * =====================================================================================
  */
-//TODO: Check if we allocated the memory correctly (struct pointers, and pointers inside structs)
     int
 main ( int argc, char *argv[] )
 {
@@ -78,16 +77,14 @@ main ( int argc, char *argv[] )
         new_client_p = (struct chat_client *)malloc(sizeof(struct chat_client));
         new_client_p->socket = nsfd;
         new_client_p->ll = &ll;
+        new_client_p->index = new_client_p->ll->next_index;
         strcpy(new_client_p->nickname, "");
 
         // create a thread for each client
         pthread_create(&threads[nsfd], NULL, (void*)tcp_read, (void*)new_client_p);
 
         // add socket file descriptor to linked list
-        // TODO: Isn't realy nice => We may wan't to add clients to the list instead of sockets
         linked_list_insert((void*)&(new_client_p->socket), &ll);
-        // TODO: This should be done nicer. Do we really need this information here?
-        new_client_p->index = new_client_p->ll->last->index;
     }
 
     close(sfd);

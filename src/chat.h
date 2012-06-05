@@ -31,10 +31,8 @@ typedef struct list_node {
 
 typedef struct linked_list {
     int next_index;
-    /*TODO: rename to first_p, last_p?*/
-    list_node_t *first;
-    list_node_t *last;
-    // mutex to lock list when adding first node
+    list_node_t *first_p;
+    list_node_t *last_p;
     pthread_mutex_t mutex;
 } linked_list_t;
 

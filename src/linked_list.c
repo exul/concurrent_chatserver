@@ -30,8 +30,8 @@
 linked_list_init ( linked_list_t *linked_list_p )
 {
     // we have no elements when we start
-    linked_list_p->first = NULL;
-    linked_list_p->last= NULL;
+    linked_list_p->first_p = NULL;
+    linked_list_p->last_p = NULL;
     linked_list_p->next_index = 0;
     // initialize mutex
     int retval = pthread_mutex_init(&(linked_list_p->mutex), NULL);
@@ -71,13 +71,13 @@ linked_list_insert ( void *data_p, linked_list_t *linked_list_p )
         fprintf(stderr, "pthread_mutex_init error %d",retval), exit(1);
 
     // set first/last node
-    if(linked_list_p->first == NULL){
-        linked_list_p->first = new; 
-        linked_list_p->last = new; 
+    if(linked_list_p->first_p == NULL){
+        linked_list_p->first_p = new; 
+        linked_list_p->last_p = new; 
     }
     else{
-        linked_list_p->last->next_p = new;
-        linked_list_p->last = new; 
+        linked_list_p->last_p->next_p = new;
+        linked_list_p->last_p = new; 
     }
 
     // unlock linked list
@@ -98,7 +98,7 @@ linked_list_remove ( int index, linked_list_t *linked_list_p )
 {
     list_node_t *cur, *prev, *next;
 
-    for(cur=prev=linked_list_p->first; cur != NULL; prev=cur, cur=cur->next_p){
+    for(cur=prev=linked_list_p->first_p; cur != NULL; prev=cur, cur=cur->next_p){
         next = cur->next_p;
 
         // lock prev, cur and next
@@ -116,12 +116,12 @@ linked_list_remove ( int index, linked_list_t *linked_list_p )
 
         if(cur->index == index){
             //reset first node if we delete start node
-            if(cur->index == linked_list_p->first->index){
-                linked_list_p->first = linked_list_p->first->next_p; 
+            if(cur->index == linked_list_p->first_p->index){
+                linked_list_p->first_p = linked_list_p->first_p->next_p; 
             }
             //reset last node
-            else if(cur->index == linked_list_p->last->index){
-                linked_list_p->last = prev;
+            else if(cur->index == linked_list_p->last_p->index){
+                linked_list_p->last_p = prev;
             }
 
             prev->next_p=cur -> next_p; 
