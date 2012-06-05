@@ -76,6 +76,15 @@ server_listen ( char *address, char *port )
         sfd = socket(rp->ai_family, rp->ai_socktype,
             rp->ai_protocol);
 
+        /* avoid TIME_WAIT problem */
+        int on = 1;
+        int status = setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
+
+        if (status == -1)
+        {
+            perror("setsockopt(...,SO_REUSEADDR,...)");
+        }
+
         if (sfd == -1) 
             continue;
 
