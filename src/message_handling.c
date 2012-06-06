@@ -40,6 +40,7 @@ tcp_read ( struct chat_client *chat_client_p ){
     char buffer[MAX_BUFFER_LEN];
     char message[MAX_MESSAGE_LEN];
     int retval;
+    int retval_command;
     int nsfd;
     char *hello = "Bitte gib deinen Nickname ein: ";
     char *nickl = "Sorry, dein Nickname ist zu lang, Nickname wurde gekürzt!\n";
@@ -80,14 +81,17 @@ tcp_read ( struct chat_client *chat_client_p ){
                 write_message( chat_client_p, message);
             }
             else{
-                // disconnect if clients sends /quit command
-                // telnet sends \r\n
-                char command[8] = "/quit\r\n\0";
-                if(strcmp(buffer, command) == 0){
-                    close_connection(chat_client_p);
-                    return;
-                }
+                retval_command = handle_command(chat_client_p, buffer);
 
+                // command found and handled
+                if(retval_command == 0){
+                    continue;
+                }
+                // command found, we want to exit this function
+                else if(retval_command == -1){
+                    return; 
+                }
+                
                 // write nickname, if the last message was terminated by \n
                 if(message_terminated){
                     strncpy(message, chat_client_p->nickname, MAX_NICK_LEN);
@@ -124,7 +128,7 @@ tcp_read ( struct chat_client *chat_client_p ){
  * =====================================================================================
  */
     void
-write_message ( struct chat_client *chat_client_p, char message[320] )
+write_message ( struct chat_client *chat_client_p, char message[MAX_MESSAGE_LEN] )
 {
     list_node_t *cur;
 
@@ -149,8 +153,16 @@ write_message ( struct chat_client *chat_client_p, char message[320] )
  * =====================================================================================
  */
     int
-handle_command ( struct chat_client *chat_client_p, char message[320] )
+handle_command ( struct chat_client *chat_client_p, char buffer[MAX_BUFFER_LEN] )
 {
+    // disconnect if clients sends /quit command
+    // telnet sends \r\n
+    char *quit = "/quit\r\n\0";
+    if(strcmp(buffer, quit) == 0){
+        close_connection(chat_client_p);
+        return -1;
+    }
+
     // command found and executed
-    return 0;
+    return 1;
 }		/* -----  end of function handle_command  ----- */

@@ -173,5 +173,5 @@ linked_list_remove ( int index, linked_list_t *linked_list_p )
         }
     }
 
-    return EXIT_SUCCESS;
+    return 0;
 }		/* -----  end of function linked_list_remove  ----- */

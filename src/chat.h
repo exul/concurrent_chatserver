@@ -54,4 +54,5 @@ int new_connection (int sfd);
 int close_connection (struct chat_client *chat_client_p);
 
 void tcp_read (struct chat_client *chat_client_p);
-void write_message (struct chat_client *chat_client_p, char message[320]);
+void write_message (struct chat_client *chat_client_p, char message[MAX_MESSAGE_LEN]);
+int handle_command (struct chat_client *chat_client_p, char buffer[MAX_BUFFER_LEN]);
