@@ -119,6 +119,15 @@ Damit eine möglichst hohe Parallelität erreicht wird, wird für jeden Client, 
 \subsection{Nachrichtenlänge}
 Da Nachrichten länger sein können, als die Länge des Buffers, wird so lange gelesen, bis ein Newline (Unix Newline \textbackslash n) gelesen wird.
 
+\subsection{Makefile}
+Um den Chat zu kompilieren werden folgende Optionen genutzt:
+\begin{itemize}
+    \item \texttt{-Wall} um alle Warnungen auszugeben
+    \item \texttt{-Werror} Warnungen werden zu Fehlern
+    \item \texttt{-g} Um das Program debuggen zu können
+    \item \texttt{-lpthread} Damit Pthreads verwendet werden können
+\end{itemize}
+
 \section{Probleme}
 \subsection{TIME\_WAIT}
 Wenn der Server beendet wird, wird der Socket im Normalfall nicht direkt geschlossen. Wird nun versucht den Server auf dem selben Port wieder zu starten, funktioniert dies nicht. Um dieses Problem zu vermeiden, kann ein Port wieder benutzt werden:
@@ -135,5 +144,12 @@ if (status == -1)
 
 \subsection{Message während dem schreiben}
 \section{Bedienung}
+\subsection{Aufruf}
+Beim Aufruf des Chats werden zwei Parameter benötigt: Adresse und Port:
+\texttt{./chat localhost 54321}
+
+\subsection{Befehle}
+\textbf{/quit:} Chat verlassen
+
 \section{Fazit}
 \end{document}
