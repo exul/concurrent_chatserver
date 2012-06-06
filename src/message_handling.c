@@ -16,6 +16,8 @@
  * =====================================================================================
  */
 #include <stdlib.h>
+//TODO: Maybe we don't need stdio
+#include <stdio.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -156,13 +158,34 @@ write_message ( struct chat_client *chat_client_p, char message[MAX_MESSAGE_LEN]
 handle_command ( struct chat_client *chat_client_p, char buffer[MAX_BUFFER_LEN] )
 {
     // disconnect if clients sends /quit command
-    // telnet sends \r\n
-    char *quit = "/quit\r\n\0";
-    if(strcmp(buffer, quit) == 0){
+    if(strcmp(left(buffer,5), "/quit") == 0){
         close_connection(chat_client_p);
         return -1;
+    }
+
+    // change nickname if client sends /nick
+    if(strcmp(left(buffer,5), "/nick") == 0){
+        //TODO: To be implemented
+        printf("Change nickname\n");
+        return 0;
     }
 
     // command found and executed
     return 1;
 }		/* -----  end of function handle_command  ----- */
+
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  left
+ *  Description:  Get n chars from the left.
+ * =====================================================================================
+ */
+
+    char*
+left( char* str, int len )
+{
+    char *command = (char *)malloc(len * sizeof(char));
+    strncpy(command, str, len);
+    return command;
+}		/* -----  end of function substring ----- */
