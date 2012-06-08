@@ -51,8 +51,6 @@ handle_command ( struct chat_client *chat_client_p, char buffer[MAX_BUFFER_LEN] 
         strncpy(nickname_old, chat_client_p->nickname, strlen(chat_client_p->nickname));
 
         set_nickname(chat_client_p, nickname);
-        //TODO: Just for debugging
-        printf("Change nickname: %s\n", substr(buffer, 6, strlen(buffer)));
 
         // write message that the user has a new nickname
         strncpy(message, nickname_old, strlen(nickname_old));
@@ -63,6 +61,15 @@ handle_command ( struct chat_client *chat_client_p, char buffer[MAX_BUFFER_LEN] 
         return 0;
     }   
 
+    if(strcmp(substr(buffer,0,3), "/me") == 0){ 
+        strncpy(message, chat_client_p->nickname, MAX_NICK_LEN);
+        strncat(message, " ", 1);
+        strncat(message, substr(buffer, 4, strlen(buffer)), MAX_BUFFER_LEN);
+        write_message(chat_client_p, message);
+        //TODO: To be implemented
+        return 0; 
+    }   
+
     memset(&message[0], 0, sizeof(message));
 
     // command found and executed
@@ -70,8 +77,7 @@ handle_command ( struct chat_client *chat_client_p, char buffer[MAX_BUFFER_LEN] 
 }               /* -----  end of function handle_command  ----- */
 
 /* 
- * ===  FUNCTION  ======================================================================
- *         Name:  set_nickname
+ * ===  FUNCTION  ====================================================================== *         Name:  set_nickname
  *  Description:  
  * =====================================================================================
  */
@@ -94,6 +100,4 @@ set_nickname ( struct chat_client *chat_client_p, char buffer[MAX_BUFFER_LEN] )
     }
 
     strncpy(chat_client_p->nickname, buffer, len);
-
-    return ;
 }               /* -----  end of function set_nickname  ----- */
