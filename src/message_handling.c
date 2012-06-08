@@ -45,7 +45,6 @@ tcp_read ( struct chat_client *chat_client_p ){
     int retval_command;
     int nsfd;
     char *hello = "Bitte gib deinen Nickname ein: ";
-    char *nickl = "Sorry, dein Nickname ist zu lang, Nickname wurde gekürzt!\n";
     int len;
     int message_terminated;
 
@@ -55,6 +54,10 @@ tcp_read ( struct chat_client *chat_client_p ){
     send(nsfd, hello, strlen(hello), 0);
 
     for(;;){
+        // clean memory
+        memset(&buffer[0], 0, sizeof(buffer));
+        memset(&message[0], 0, sizeof(message));
+
         // read message from socket
         retval = read(nsfd, buffer, sizeof(buffer));
 
@@ -67,17 +70,8 @@ tcp_read ( struct chat_client *chat_client_p ){
         // Use strnpy and strncat, since we don't send binary data that's ok
         if (retval != -1){
             if(strlen(chat_client_p->nickname)==0){
-                memset(&chat_client_p->nickname[0], 0, sizeof(chat_client_p->nickname));
+                set_nickname(chat_client_p, buffer);
 
-                len = strlen(buffer);
-                if(buffer[len-1] == '\n')
-                    len=len-2;
-                if(len > MAX_NICK_LEN){
-                    len = MAX_NICK_LEN;
-                    send(nsfd, nickl, strlen(nickl), 0);
-                }
-
-                strncpy(chat_client_p->nickname, buffer, len);
                 strncpy(message, chat_client_p->nickname, MAX_BUFFER_LEN);
                 strncat(message, " joined chat\n", MAX_BUFFER_LEN);
                 write_message( chat_client_p, message);
@@ -89,7 +83,7 @@ tcp_read ( struct chat_client *chat_client_p ){
                 if(retval_command == 0){
                     continue;
                 }
-                // command found, we want to exit this function
+                // command found, but we want to exit this function
                 else if(retval_command == -1){
                     return; 
                 }
@@ -115,10 +109,6 @@ tcp_read ( struct chat_client *chat_client_p ){
             else{
                 message_terminated = 0;
             }
-
-            // empty buffer
-            memset(&buffer[0], 0, sizeof(buffer));
-            memset(&message[0], 0, sizeof(message));
         }
     }
 }
@@ -157,35 +147,81 @@ write_message ( struct chat_client *chat_client_p, char message[MAX_MESSAGE_LEN]
     int
 handle_command ( struct chat_client *chat_client_p, char buffer[MAX_BUFFER_LEN] )
 {
+    char message[MAX_MESSAGE_LEN];
+    char *known = " is now known as ";
+    char *nickname_old = (char *)malloc(strlen(chat_client_p->nickname) * sizeof(char));
     // disconnect if clients sends /quit command
-    if(strcmp(left(buffer,5), "/quit") == 0){
+    if(strcmp(substr(buffer,0,5), "/quit") == 0){
         close_connection(chat_client_p);
         return -1;
     }
 
     // change nickname if client sends /nick
-    if(strcmp(left(buffer,5), "/nick") == 0){
-        //TODO: To be implemented
-        printf("Change nickname\n");
+    if(strcmp(substr(buffer,0,5), "/nick") == 0){
+        char *nickname = substr(buffer, 6, strlen(buffer));
+
+        // save old nickname
+        strncpy(nickname_old, chat_client_p->nickname, strlen(chat_client_p->nickname));
+
+        set_nickname(chat_client_p, nickname);
+        //TODO: Just for debugging
+        printf("Change nickname: %s\n", substr(buffer, 6, strlen(buffer)));
+
+        // write message that the user has a new nickname
+        strncpy(message, nickname_old, strlen(nickname_old));
+        strncat(message, known, strlen(known));
+        strncat(message, chat_client_p->nickname, strlen(chat_client_p->nickname));
+        strncat(message, "\n", 1);
+        write_message( chat_client_p, message);
         return 0;
     }
+
+    memset(&message[0], 0, sizeof(message));
 
     // command found and executed
     return 1;
 }		/* -----  end of function handle_command  ----- */
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  substr
+ *  Description:  Get substring from char array.
+ * =====================================================================================
+ */
+    char*
+substr ( char* str, int offset,int len )
+{
+    char *command = (char *)malloc(len * sizeof(char));
+    strncpy(command, str+offset, len);
+    return command;
+}		/* -----  end of function substr  ----- */
+
 
 /* 
  * ===  FUNCTION  ======================================================================
- *         Name:  left
- *  Description:  Get n chars from the left.
+ *         Name:  set_nickname
+ *  Description:  
  * =====================================================================================
  */
-
-    char*
-left( char* str, int len )
+    void
+set_nickname ( struct chat_client *chat_client_p, char buffer[MAX_BUFFER_LEN] )
 {
-    char *command = (char *)malloc(len * sizeof(char));
-    strncpy(command, str, len);
-    return command;
-}		/* -----  end of function substring ----- */
+    char *nickl = "Sorry, dein Nickname ist zu lang, Nickname wurde gekürzt!\n";
+    int len = strlen(buffer);
+    int nsfd = chat_client_p->socket;
+
+    //clean memory
+    memset(&chat_client_p->nickname[0], 0, sizeof(chat_client_p->nickname));
+
+    // remove newline
+    if(buffer[len-1] == '\n')
+        len=len-2;
+    if(len > MAX_NICK_LEN){
+        len = MAX_NICK_LEN;
+        send(nsfd, nickl, strlen(nickl), 0);
+    }
+
+    strncpy(chat_client_p->nickname, buffer, len);
+
+    return ;
+}		/* -----  end of function set_nickname  ----- */
