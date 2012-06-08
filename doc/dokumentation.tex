@@ -113,8 +113,10 @@ hints.ai_protocol = pe->p_proto;
     }
 \end{verbatim}
 
-\subsection{Mutli-Threading}
-Damit eine möglichst hohe Parallelität erreicht wird, wird für jeden Client, der sich zum Server verbindet ein eigener Thread erstellt. Jeder Thread nimmt auf seinem Socket Nachrichten entgegen und sendet die Empfangenen Daten an alle anderen Clients weiter. Dies ist möglich, weil jeder Client einen Pointer auf eine LinkedList enthält, in welcher alle Clients eingetragen sind.
+\subsection{Multithreading}
+Damit eine möglichst hohe Parallelität erreicht wird, wird für jeden Client, der sich zum Server verbindet ein eigener Thread erstellt. Jeder Thread nimmt auf seinem Socket Nachrichten entgegen und sendet die Empfangenen Daten an alle anderen Clients weiter. Dies ist möglich, weil jeder Client einen Pointer auf eine Linked List enthält, in welcher alle Clients eingetragen sind.
+
+Die Parallelität könnte weiter gesteigert werden, wenn an Stelle von Locking (Mutexes) Message Passing verwendet würde. Durch die Verwendung von Message Passing würde die Komplexität allerdings bedeutend zunehmen. Aus diesem Grund wird für den Chat kein Message Passing verwendet.
 
 \subsection{Nachrichtenlänge}
 Da Nachrichten länger sein können, als die Länge des Buffers, wird so lange gelesen, bis ein Newline (Unix Newline \textbackslash n) gelesen wird.
@@ -142,10 +144,20 @@ if (status == -1)
 }
 \end{verbatim}
 
-\subsection{Message während dem schreiben}
+\subsection{Nachricht während dem schreiben}
+Werden Nachrichten verschickt, während ein Benutzer gerade einen Text eingiegt, so wird die Nachrichten inmitten des getippten Textes angezeigt. Der Benutzer kann die Nachricht zu Ende schreiben und abschicken, die emppfangenen Zeichen stören die zu sendende Nachricht dabei nicht.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=14cm]{gfx/chat_interrupt}
+    \caption{Vermischte Nachrichten}
+    \label{img:chat_interrupt}
+\end{figure}
+
 \section{Bedienung}
 \subsection{Aufruf}
 Beim Aufruf des Chats werden zwei Parameter benötigt: Adresse und Port:
+
 \texttt{./chat localhost 54321}
 
 \subsection{Befehle}
@@ -157,4 +169,12 @@ Beim Aufruf des Chats werden zwei Parameter benötigt: Adresse und Port:
 \end{description}
 
 \section{Fazit}
+\subsection{Rückblick}
+Durch diese Arbeit konnten Einblicke in verschiedene Gebiete der Programmierung in C gewonnen werden. Die beiden grössten Herausforderungen bei der Erstellung des Chats waren das Speichermanagement und der Umgang mit Zeichenketten.
+
+\subsection{Mögliche Erweiterungen}
+Aufgrund der zur Verfügung stehenden Zeit konnten leider nicht alle Ideen implementiert werden. Es könnten zusätzliche Befehle, wie beispielsweise das Versenden von privaten Nachrichten mittels \texttt{/query}, implementiert werden.
+
+Weiter könnte das Error-Handling eleganter gelöst werden.
+
 \end{document}
