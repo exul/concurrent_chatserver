@@ -47,7 +47,6 @@ linked_list_init ( linked_list_t *linked_list_p )
  *  Description:  Insert new element into linked list.
  * =====================================================================================
  */
-//TODO: Do cleanup, maybe first or last node isn't needed
     int
 linked_list_insert ( void *data_p, linked_list_t *linked_list_p )
 {
@@ -92,7 +91,6 @@ linked_list_insert ( void *data_p, linked_list_t *linked_list_p )
  *  Description:  Remove element from linked list.
  * =====================================================================================
  */
-//TODO: Do we have to do that much locking?
     int
 linked_list_remove ( int index, linked_list_t *linked_list_p )
 {

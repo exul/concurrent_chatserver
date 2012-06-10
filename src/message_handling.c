@@ -16,7 +16,6 @@
  * =====================================================================================
  */
 #include <stdlib.h>
-//TODO: Maybe we don't need stdio
 #include <stdio.h>
 
 #include <sys/types.h>
@@ -36,7 +35,6 @@
  *  Description:  Read characters from tcp socket.
  * =====================================================================================
  */
-//TODO: Check if we allocated the memory correctly (struct pointers, and pointers inside structs)
     void
 tcp_read ( struct chat_client *chat_client_p ){
     char buffer[MAX_BUFFER_LEN];
