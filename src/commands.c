@@ -66,7 +66,6 @@ handle_command ( struct chat_client *chat_client_p, char buffer[MAX_BUFFER_LEN] 
         strncat(message, " ", 1);
         strncat(message, substr(buffer, 4, strlen(buffer)), MAX_BUFFER_LEN);
         write_message(chat_client_p, message);
-        //TODO: To be implemented
         return 0; 
     }   
 
@@ -78,7 +77,7 @@ handle_command ( struct chat_client *chat_client_p, char buffer[MAX_BUFFER_LEN] 
 
 /* 
  * ===  FUNCTION  ====================================================================== *         Name:  set_nickname
- *  Description:  
+ *  Description: Set nickname in chat_client. 
  * =====================================================================================
  */
     void

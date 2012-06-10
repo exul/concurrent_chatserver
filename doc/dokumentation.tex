@@ -66,17 +66,17 @@ Dozent: Tomas Pospisek}
 
 \section{Einführung}
 \subsection{Projektbeschreibung}
-Die Seminararbeit beinhaltet die Analye, Konzeption und Entwicklung eines multi-threaded Chat-Servers in C. Grundlegende Kenntnisse die dabei zur Anwendung kommen sind die Programmierung mit pthreads sowie die Benutzung des Socket-APIs.
+Die Seminararbeit beinhaltet die Analye, Konzeption und Entwicklung eines multi-threaded Chat-Servers in C. Grundlegende Kenntnisse die dabei zur Anwendung kommen, sind die Programmierung mit pthreads sowie die Benutzung des Socket-APIs.
 
 \subsection{Ausgangslage}
-In der Vorlesung haben die Studenten die Grundlagen der parallele Programmierung und der damit verbundenen Probleme kennengelernt. In Form einer Seminararbeit soll das erlernte Wissen nun in die Praxis umgesetzt werden.
+In der Vorlesung haben die Studenten die Grundlagen der parallelen Programmierung und der damit verbundenen Probleme kennengelernt. In Form einer Seminararbeit soll das erlernte Wissen nun in die Praxis umgesetzt werden.
 
 \subsection{Ziele der Arbeit}
 Entwicklung eines Chatservers in C, der in der Lage ist, mehrere Chat-Clients zu bedienen. Die Applikation muss serverseitig mit phtreads implementiert werden. Als Client kommt telnet bzw. netcat zum Einsatz. Das Ziel der Arbeit ist ein funktionaler Chatserver, der Nachrichten erfolgreich über das Netzwerk an andere, ebenfalls verbundene Chatclients, weitergeben kann.
 
 \section{Umsetzung}
 \subsection{Netzwerk}
-Um sowohl IPv4, wie auch IPv6 zu unterstützten, wird \texttt{getaddrinfo()} verwendet. \texttt{getaddrinfo()} liefert eine Liste von Adressen zurück. Die Liste wird nach einer verwendbaren Adresse durchsucht. Falls keine entsprechende Adresse gefunden wird, wir das Programm beendet:
+Um sowohl IPv4, wie auch IPv6 zu unterstützen, wird \texttt{getaddrinfo()} verwendet. \texttt{getaddrinfo()} liefert eine Liste von Adressen zurück. Die Liste wird nach einer verwendbaren Adresse durchsucht. Falls keine entsprechende Adresse gefunden wird, wird das Programm beendet:
 
 \begin{verbatim}
 hints.ai_protocol = pe->p_proto;
@@ -114,7 +114,7 @@ hints.ai_protocol = pe->p_proto;
 \end{verbatim}
 
 \subsection{Multithreading}
-Damit eine möglichst hohe Parallelität erreicht wird, wird für jeden Client, der sich zum Server verbindet ein eigener Thread erstellt. Jeder Thread nimmt auf seinem Socket Nachrichten entgegen und sendet die Empfangenen Daten an alle anderen Clients weiter. Dies ist möglich, weil jeder Client einen Pointer auf eine Linked List enthält, in welcher alle Clients eingetragen sind.
+Damit eine möglichst hohe Parallelität erreicht wird, wird für jeden Client, der sich zum Server verbindet, ein eigener Thread erstellt. Jeder Thread nimmt auf seinem Socket Nachrichten entgegen und sendet die empfangenen Daten an alle anderen Clients weiter. Dies ist möglich, weil jeder Client einen Pointer auf eine Linked List enthält, in welcher alle Clients eingetragen sind.
 
 Die Parallelität könnte weiter gesteigert werden, wenn an Stelle von Locking (Mutexes) Message Passing verwendet würde. Durch die Verwendung von Message Passing würde die Komplexität allerdings bedeutend zunehmen. Aus diesem Grund wird für den Chat kein Message Passing verwendet.
 
@@ -126,13 +126,13 @@ Um den Chat zu kompilieren werden folgende Optionen genutzt:
 \begin{itemize}
     \item \texttt{-Wall} um alle Warnungen auszugeben
     \item \texttt{-Werror} Warnungen werden zu Fehlern
-    \item \texttt{-g} Um das Program debuggen zu können
+    \item \texttt{-g} Um das Programm debuggen zu können
     \item \texttt{-lpthread} Damit Pthreads verwendet werden können
 \end{itemize}
 
 \section{Probleme}
 \subsection{TIME\_WAIT}
-Wenn der Server beendet wird, wird der Socket im Normalfall nicht direkt geschlossen. Wird nun versucht den Server auf dem selben Port wieder zu starten, funktioniert dies nicht. Um dieses Problem zu vermeiden, kann ein Port wieder benutzt werden:
+Wenn der Server beendet wird, wird der Socket im Normalfall nicht direkt geschlossen. Wird nun versucht den Server auf demselben Port wieder zu starten, funktioniert dies nicht. Um dieses Problem zu vermeiden, kann ein Port wieder benutzt werden:
 
 \begin{verbatim}
 int on = 1;
@@ -144,8 +144,8 @@ if (status == -1)
 }
 \end{verbatim}
 
-\subsection{Nachricht während dem schreiben}
-Werden Nachrichten verschickt, während ein Benutzer gerade einen Text eingiegt, so wird die Nachrichten inmitten des getippten Textes angezeigt. Der Benutzer kann die Nachricht zu Ende schreiben und abschicken, die emppfangenen Zeichen stören die zu sendende Nachricht dabei nicht.
+\subsection{Nachricht während dem Schreiben}
+Werden Nachrichten verschickt, während ein Benutzer gerade einen Text eingibt, so wird die Nachricht inmitten des getippten Textes angezeigt. Der Benutzer kann die Nachricht zu Ende schreiben und abschicken, die empfangenen Zeichen stören die zu sendende Nachricht dabei nicht.
 
 \begin{figure}[H]
     \centering
