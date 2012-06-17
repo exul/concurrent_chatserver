@@ -1,0 +1,83 @@
+%        File: zusammenfassung.tex
+%     Created: Sat Jun 16 17:34 PM 2012 C
+% Last Change: Sat Jun 16 17:34 PM 2012 C
+%
+\documentclass[11pt,a4paper]{article}
+
+% german dictionary
+\usepackage[ngerman]{babel}
+
+% enconding
+\usepackage[utf8]{inputenc}
+
+% graphics
+\usepackage{graphicx}
+
+% handle positions
+\usepackage{float}
+
+% set borders
+\usepackage{a4wide}
+
+% use URLs
+\usepackage{url}
+
+% expand table formatting
+\usepackage{array}
+
+% header and footer
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+
+\setcounter{secnumdepth}{-1}
+
+\fancyhead[L]{Seminararbeit - ZHAW}
+\fancyhead[R]{Andreas Brönnimann}
+\fancyfoot[C]{\today}
+\renewcommand{\footrulewidth}{0.5pt}
+\begin{document}
+
+\section{Multi-threaded Chatserver in C}
+\subsection{Bedienung}
+\subsubsection{Server starten}
+Der Chatserver wird mit zwei Parametern aufgerufen, der Adresse die verwendet werden soll und der entsprechende Port:
+
+\begin{flushleft}
+\textbf{Beispiel}
+
+\texttt{./chat localhost 54321}
+\end{flushleft}
+
+\subsubsection{Chat Befehle}
+Wenn sich ein Client mittels Telnet verbunden hat und dieser seinen Nickname gewählt hat, stehen ihm folgende Befehle zur Verfügung:
+\begin{description}
+    \item[/quit:] Chat verlassen
+    \item[/nick:] Nickname ändern (bspw. \texttt{/nick John})
+    \item[/me:] Aktion beschreiben (bspw. \texttt{/me geht C coden})
+\end{description}
+
+\subsection{Probleme}
+\subsection{TIME\_WAIT}
+Wenn der Server beendet wird, wird der Socket im Normalfall nicht direkt geschlossen. Wird nun versucht den Server auf demselben Port wieder zu starten, funktioniert dies nicht. Um dieses Problem zu vermeiden, kann ein Port wieder benutzt werden:
+
+\begin{verbatim}
+int on = 1;
+int status = setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, (const char *) 
+&on, sizeof(on));
+
+if (status == -1) 
+{   
+    perror("setsockopt(...,SO_REUSEADDR,...)");
+}
+\end{verbatim}
+
+\subsection{Nachrichten während dem Schreiben}
+Werden Nachrichten verschickt, während ein Benutzer gerade einen Text eingibt, so wird die Nachricht inmitten des getippten Textes angezeigt. Der Benutzer kann die Nachricht zu Ende schreiben und abschicken, die empfangenen Zeichen stören die zu sendende Nachricht dabei nicht.
+
+Dieses Problem müsste mit einem eigenen Chat-Client gelöst werden.
+
+\end{document}
+
+
+
