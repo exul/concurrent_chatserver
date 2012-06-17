@@ -1,0 +1,118 @@
+\documentclass[12pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{german}
+\usetheme{Berkeley}
+\title[Seminararbeit]{Multi-threaded Chatserver in C}
+\author{Andreas Brönnimann}
+\institute{ZHAW - Zürcher Hochschule für Angewandte Wissenschaften}
+\date{18.06.2012}
+
+\setbeamerfont{footnote}{size=\tiny}
+\setbeamertemplate{footline}[frame number]
+\setbeamertemplate{navigation symbols}{}
+
+\begin{document}
+
+    \begin{frame}
+        \titlepage
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Ablauf}
+        \tableofcontents
+    \end{frame}
+
+    \section{Implementation}
+    \begin{frame}
+        \frametitle{Implementation}
+	    \begin{itemize}
+		\item Netzwerk-Kommunikation: \texttt{getaddrinfo}
+		    \begin{itemize}
+			\item Unterstützt IPv4 und IPv6 
+		    \end{itemize}
+		\item LinkedList mit Mutex pro Element
+		\item Kein Message Passing, da zu komplex
+		\item String Handling: \texttt{strncpy}/\texttt{strncat}
+            \end{itemize}
+    \end{frame}
+
+    \begin{frame}
+    \frametitle{Implementation}
+	\begin{itemize}
+	    \item genutzte Compiler Optionen
+		\begin{description} 
+		    \item[-Wall:] um alle Warnungen auszugeben
+		    \item[-Werror:] Warnungen werden zu Fehlern
+		    \item[-g:] um das Programm debuggen zu können
+		    \item[-lpthread:] Damit Pthreads verwendet werden können
+	\end{description}
+
+	\end{itemize}
+    \end{frame}
+
+
+    \section{Probleme}
+    \begin{frame}[fragile]
+	\frametitle{Problem}
+	\begin{itemize}
+	    \item TIME\_WAIT: Socket wiederverwenden
+  	\end{itemize}
+
+\begin{verbatim}
+int on = 1;
+int status = setsockopt(sfd, SOL_SOCKET, 
+SO_REUSEADDR, (const char *) &on, sizeof(on));
+
+if (status == -1) 
+{   
+    perror("setsockopt(...,SO_REUSEADDR,...)");
+}
+\end{verbatim}
+\end{frame}
+   
+    \begin{frame}
+	\frametitle{Probleme} 
+	\begin{itemize}
+	    \item Nachrichten während dem Schreiben
+	\end{itemize}
+
+	\begin{figure}[H]
+	    \centering
+	    \includegraphics[width=5cm]{gfx/chat_interrupt}
+	    \label{img:chat_interrupt}
+	\end{figure}
+    \end{frame}
+
+    \section{Bedienung}
+    \begin{frame}
+        \frametitle{Bedienung}
+	Chatserver starten mit: \texttt{./chat localhost 54321}
+	\bigskip
+	Client verbinden: \texttt{telnet localhost 54321}
+	\begin{description}
+	    \item[/quit:] Chat verlassen
+	    \item[/nick:] Nickname ändern \newline (bspw. \texttt{/nick John})
+	    \item[/me:] Aktion beschreiben \newline (bspw. \texttt{/me geht C coden})
+	\end{description}
+    \end{frame}
+
+    \section{Fazit}
+    \begin{frame}
+    \frametitle{Fazit}
+	\begin{itemize}
+	    \item Parallelität bringt mehr Komplexität als gedacht
+	    \item in C muss man sich um alles kümmern (bspw. Speichermanagement)
+	    \item Freud und Leid liegen nah beieinander
+	\end{itemize}
+    \end{frame}
+
+    \section{Fragen}
+    \begin{frame}
+    \frametitle{Fragen}
+        \begin{figure}[H]
+	    \centering
+	        \includegraphics[width=6cm]{gfx/questionmark}
+        \end{figure}
+    \end{frame}
+\end{document}
